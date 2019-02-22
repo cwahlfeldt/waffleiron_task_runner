@@ -1,4 +1,0 @@
-<div class="swiper-slide">
- <?php echo $slot; ?>
-
-</div>

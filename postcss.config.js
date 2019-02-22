@@ -5,6 +5,6 @@ module.exports = () => ({
     require('@csstools/postcss-sass'),
     require('tailwindcss')('./tailwind.js'),
     require('autoprefixer'),
-    //require('cssnano'),'
+    require('cssnano'),
   ]
 })
