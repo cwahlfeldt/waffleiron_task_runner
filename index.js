@@ -10,10 +10,6 @@ const spinner = require('ora')()
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 
-// set the global path for your app
-global.appRoot = path.resolve(__dirname)
-const defaultDir = appRoot + '/public'
-
 // setup commander
 program
   .version('0.0.1')
@@ -31,7 +27,7 @@ const waffleiron = async () => {
     console.log('Pouring batter:')
     spinner.start()
     await mkdir()
-    await mkdir(appRoot + '/.cache', true)
+    await mkdir('./.cache', true)
     await postcssBuild()
     await typescriptBuild()
     console.log('Waffles are done (built)!')
@@ -43,7 +39,7 @@ const waffleiron = async () => {
   console.log('Watching batter:');
   spinner.start()
   await mkdir()
-  await mkdir(appRoot + '/.cache', true)
+  await mkdir('./.cache', true)
   await postcssBuild()
   await typescriptBuild()
 
@@ -103,23 +99,30 @@ const waffleiron = async () => {
   // build typescript
   async function typescriptBuild() {
     const {err} = await exec(
-      './node_modules/.bin/rollup --config',
+      __dirname + '/node_modules/.bin/rollup --config ' + __dirname + '/rollup.config.js',
     )
-    if (err) console.error(err)
-    process.exit(1)
+    if (err) {
+      console.error(err)
+      process.exit(1)
+    }
   }
 
   // build postcss
   async function postcssBuild() {
     const {err} = await exec(
-      'node_modules/.bin/postcss src/styles/index.css -o public/bundle.css',
+      __dirname + '/node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ./src/styles/index.css -o ./public/bundle.css',
     )
-    if (err) console.error(err)
-    process.exit(1)
+    if (err) {
+      console.error(err)
+      process.exit(1)
+    }
   }
 
   // make a directory
-  async function mkdir(name = defaultDir, overwrite = true) {
+  async function mkdir(
+    name = './public',
+    overwrite = true
+  ) {
     try {
       if (!fs.existsSync(name)) {
         fs.mkdirSync(name)
@@ -129,7 +132,7 @@ const waffleiron = async () => {
         fs.mkdirSync(name)
       }
     } catch (err) {
-      console.error(err)
+      console.log(err)
       process.exit(1)
     }
   }
