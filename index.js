@@ -3,22 +3,23 @@
 // globals
 const browserSync = require('browser-sync')
 const fs = require('fs')
-const path = require('path')
 const rimraf = require('rimraf')
 const program = require('commander')
 const spinner = require('ora')()
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
+const config = fs.existsSync('./waffles.config.js') ? require('./waffles.config.js') : require(__dirname + '/waffles.default.js')
 
 // setup commander
 program
-  .version('0.0.1')
+  .version('0.0.3')
   .option('-w, --watch', 'watch', {isDefault: true})
   .option('-b, --build', 'build')
+  .option('-bp, --build-production', 'build production')
+  .option('-e, --env <env>', 'environment')
   .parse(process.argv)
 
-// setup dotenv
-require('dotenv').config()
+process.env.NODE_ENV = (program.env || program.build-production) && config.env === 'production' ? 'production' : 'development'
 
 // main async function
 const waffleiron = async () => {

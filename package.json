@@ -1,7 +1,7 @@
 {
   "name": "waffleiron",
   "author": "Chris Wahlfeldt <chriswahlfeldt@gmail.com> (https://cwahlfeldt.github.io)",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "repository": "github:cwahlfeldt/waffleiron",
   "main": "index.js",
   "license": "MIT",
@@ -50,5 +50,7 @@
     "tslib": "^1.9.3",
     "typescript": "^3.3.3"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "rollup-plugin-uglify": "^6.0.2"
+  }
 }
