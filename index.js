@@ -9,15 +9,14 @@ const merge = require('deepmerge')
 const browserSync = require('browser-sync')
 const rimraf = require('rimraf')
 const spinner = require('ora')()
-const pjson = require('package.json')
-
-const defaultConfig = require(__dirname + '/waffles.default.js')
-const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js') : undefined
 
 // config file if local merge both defaults and local else just default
+const defaultConfig = require(__dirname + '/waffles.default.js')
+const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js') : undefined
 const config = fs.existsSync('./waffles.config.js') ? merge(userConfig(), defaultConfig()) : defaultConfig()
 
 // setup commander
+const pjson = require(__dirname + '/package.json')
 program
   .version(pjson.version)
   .option('-w, --watch', 'watch', {isDefault: true})
