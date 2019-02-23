@@ -1,90 +1,91 @@
 #!/usr/bin/env node
 
-// globals
-const browserSync = require('browser-sync')
+// dependencies
 const fs = require('fs')
-const rimraf = require('rimraf')
-const program = require('commander')
-const spinner = require('ora')()
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
+const program = require('commander')
+const browserSync = require('browser-sync')
+const rimraf = require('rimraf')
+const spinner = require('ora')()
+
+// config file
 const config = fs.existsSync('./waffles.config.js') ? require('./waffles.config.js') : require(__dirname + '/waffles.default.js')
 
 // setup commander
 program
-  .version('0.0.3')
+  .version('0.0.5')
   .option('-w, --watch', 'watch', {isDefault: true})
+  .option('-s, --source', 'source file(s)')
   .option('-b, --build', 'build')
-  .option('-bp, --build-production', 'build production')
+  .option('-p, --production', 'build production')
   .option('-e, --env <env>', 'environment')
   .parse(process.argv)
 
-process.env.NODE_ENV = (program.env || program.build-production) && config.env === 'production' ? 'production' : 'development'
+// set env for build types
+if (config.env === 'production') {
+  process.env.NODE_ENV = 'production'
+} else if (program.env === 'production') {
+  process.env.NODE_ENV = 'production'
+} else if (program.production) {
+  process.env.NODE_ENV = 'production'
+} else {
+  process.env.NODE_ENV = 'development'
+}
 
-// main async function
 const waffleiron = async () => {
-  // build
+  // -b --build
   if (program.build) {
     console.log('Pouring batter:')
     spinner.start()
     await mkdir()
-    await mkdir('./.cache', true)
+    await mkdir(config.cache, true)
     await postcssBuild()
     await typescriptBuild()
-    console.log('Waffles are done (built)!')
+    console.log('Waffles are done!')
     spinner.stop()
     process.exit(0)
   }
 
-  // default
-  console.log('Watching batter:');
+  // default -w --watch
+  console.log('Gonna watch da batter:');
   spinner.start()
   await mkdir()
-  await mkdir('./.cache', true)
+  await mkdir(config.cache, true)
   await postcssBuild()
   await typescriptBuild()
-
   const bs = browserSync.create()
-  const watcher = bs.watch([
-    './index.php',
-    './functions.php',
-    './tailwind.js',
-    './src/**/*.*',
-  ])
-  bs.init({
-    notify: true,
-    proxy: 'http://cec-6412.lndo.site',
-    //logLevel: 'debug',
-    plugins: ['browser-sync-logger']
-  })
-
+  const watcher = bs.watch(config.browsersync.files)
+  bs.init(config.browsersync.init)
   spinner.stop()
 
-  console.log('Pouring and watching batter:')
   watcher.on('change', async path => {
-    Object.keys(require.cache).forEach(function(id) {
+    Object.keys(require.cache).forEach(id => {
       if (/[\/\\]src[\/\\]/.test(id)) delete require.cache[id];
     })
 
-    console.log('Pouring more batter:')
+    console.log('Pouring more batter!:')
     spinner.start()
     if (path === 'tailwind.js') {
       await postcssBuild()
+      console.log('tailwind')
       spinner.stop()
       return bs.reload()
     }
 
     const ext = path.split('.').pop()
-
     switch (ext) {
       case 'php' || 'blade.php' || 'blade':
+        console.log('templates <blade>')
         bs.reload()
         return
       case 'css' || 'scss':
+        console.log('css oh yes oh yes')
         await postcssBuild()
         bs.reload()
         return
       case 'ts' || 'js':
+        console.log('js say heeeey yes!')
         await typescriptBuild()
         bs.reload()
         return
