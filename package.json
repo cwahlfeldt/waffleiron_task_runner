@@ -23,8 +23,7 @@
     "start": "./index.js",
     "build": "./index.js --build",
     "watch": "./index.js --watch",
-    "tidy": "rm -rf .cache public",
-    "publish": "gacp '$1' && npm version patch && npm publish"
+    "tidy": "rm -rf .cache public"
   },
   "dependencies": {
     "@csstools/postcss-sass": "^4.0.0",
