@@ -5,16 +5,21 @@ const fs = require('fs')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const program = require('commander')
+const merge = require('deepmerge')
 const browserSync = require('browser-sync')
 const rimraf = require('rimraf')
 const spinner = require('ora')()
+const pjson = require('package.json')
 
-// config file
-const config = fs.existsSync('./waffles.config.js') ? require('./waffles.config.js') : require(__dirname + '/waffles.default.js')
+const defaultConfig = require(__dirname + '/waffles.default.js')
+const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js') : undefined
+
+// config file if local merge both defaults and local else just default
+const config = fs.existsSync('./waffles.config.js') ? merge(userConfig(), defaultConfig()) : defaultConfig()
 
 // setup commander
 program
-  .version('0.0.5')
+  .version(pjson.version)
   .option('-w, --watch', 'watch', {isDefault: true})
   .option('-s, --source', 'source file(s)')
   .option('-b, --build', 'build')
@@ -64,7 +69,7 @@ const waffleiron = async () => {
       if (/[\/\\]src[\/\\]/.test(id)) delete require.cache[id];
     })
 
-    console.log('Pouring more batter!:')
+    console.log('Pouring more batter!')
     spinner.start()
     if (path === 'tailwind.js') {
       await postcssBuild()

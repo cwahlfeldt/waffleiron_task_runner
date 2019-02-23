@@ -1,7 +1,7 @@
 {
   "name": "waffleiron",
   "author": "Chris Wahlfeldt <chriswahlfeldt@gmail.com> (https://cwahlfeldt.github.io)",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "repository": "github:cwahlfeldt/waffleiron",
   "main": "index.js",
   "license": "MIT",
@@ -23,7 +23,8 @@
     "start": "./index.js",
     "build": "./index.js --build",
     "watch": "./index.js --watch",
-    "tidy": "rm -rf .cache public"
+    "tidy": "rm -rf .cache public",
+    "publish": "gacp '$1' && npm version patch && npm publish"
   },
   "dependencies": {
     "@csstools/postcss-sass": "^4.0.0",
@@ -34,6 +35,7 @@
     "camelcase-keys": "^5.0.0",
     "commander": "^2.19.0",
     "cssnano": "^4.1.10",
+    "deepmerge": "^3.2.0",
     "dotenv": "^6.2.0",
     "jquery": "^3.3.1",
     "ora": "^3.1.0",
