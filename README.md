@@ -13,11 +13,12 @@ or
 ```javascript
   module.exports = () => ({
     env: 'development',
-    cache: './.cache',
+    outDir: 'public',
+    cache: '.cache',
     browsersync: {
       init: {
         notify: true,
-        proxy: 'http://cec-6412.lndo.site',
+        proxy: 'https://cwahlfedt.github.io',
         plugins: ['browser-sync-logger'],
       },
       files: [

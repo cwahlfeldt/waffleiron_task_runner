@@ -5,7 +5,7 @@ module.exports = () => ({
   browsersync: {
     init: {
       notify: true,
-      proxy: 'http://cec-6412.lndo.site',
+      proxy: 'https://cwahlfedt.github.io',
       plugins: ['browser-sync-logger'],
     },
     files: [
