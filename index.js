@@ -18,7 +18,7 @@ const ms = require('ms')
 // config file if local merge both defaults and local else just default
 const defaultConfig = require(__dirname + '/waffles.default.js')
 const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js')() : {}
-const config = merge(defaultConfig(), userConfig())
+const config = merge(defaultConfig(), userConfig)
 config.outDir = process.cwd() + '/' + config.outDir
 config.cache = path.join(config.outDir, config.cache)
 console.log(config.cache)
