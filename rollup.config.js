@@ -12,8 +12,8 @@ export default {
   },
   plugins: [
     resolve(),
-    typescript(),
     commonjs(),
+    typescript(),
     process.env.NODE_ENV === 'production' ? uglify() : undefined,
   ].filter(x => x !== undefined)
 }
