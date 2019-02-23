@@ -17,7 +17,7 @@ const ms = require('ms')
 
 // config file if local merge both defaults and local else just default
 const defaultConfig = require(__dirname + '/waffles.default.js')
-const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js') : {}
+const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js')() : {}
 const config = merge(defaultConfig(), userConfig())
 config.outDir = process.cwd() + '/' + config.outDir
 config.cache = path.join(config.outDir, config.cache)
@@ -131,11 +131,11 @@ const waffleiron = async () => {
 
   // build postcss
   async function postcssBuild() {
-    const {err} = await exec(
+    const {err, stdout} = await exec(
       __dirname + '/node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ./src/styles/index.css -o ./public/bundle.css',
     )
     if (err) {
-      console.error(err)
+      console.error(stdout)
       process.exit(1)
     }
   }
