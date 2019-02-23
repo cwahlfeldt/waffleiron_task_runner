@@ -2,18 +2,26 @@
 
 // dependencies
 const fs = require('fs')
+const filesize = require('filesize')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
+const path = require('path')
 const program = require('commander')
 const merge = require('deepmerge')
+const { table } = require('table')
 const browserSync = require('browser-sync')
 const rimraf = require('rimraf')
 const spinner = require('ora')()
+const timer = require('simple-timer')
+const ms = require('ms')
 
 // config file if local merge both defaults and local else just default
 const defaultConfig = require(__dirname + '/waffles.default.js')
-const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js') : undefined
-const config = fs.existsSync('./waffles.config.js') ? merge(userConfig(), defaultConfig()) : defaultConfig()
+const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js') : {}
+const config = merge(defaultConfig(), userConfig())
+config.outDir = process.cwd() + '/' + config.outDir
+config.cache = path.join(config.outDir, config.cache)
+console.log(config.cache)
 
 // setup commander
 const pjson = require(__dirname + '/package.json')
@@ -37,17 +45,23 @@ if (config.env === 'production') {
   process.env.NODE_ENV = 'development'
 }
 
+console.log(process.env.NODE_ENV)
+
 const waffleiron = async () => {
+  timer.start('timer')
+
   // -b --build
-  if (program.build) {
+  if (program.build || program.production) {
     console.log('Pouring batter:')
     spinner.start()
     await mkdir()
-    await mkdir(config.cache, true)
+    //await mkdir(config.cache, true)
     await postcssBuild()
     await typescriptBuild()
-    console.log('Waffles are done!')
     spinner.stop()
+    timer.stop('timer')
+    console.log(printBuild())
+    console.log('Waffles were completed in ' + ms(timer.get('timer').delta))
     process.exit(0)
   }
 
@@ -55,13 +69,15 @@ const waffleiron = async () => {
   console.log('Gonna watch da batter:');
   spinner.start()
   await mkdir()
-  await mkdir(config.cache, true)
+  //await mkdir(config.cache, true)
   await postcssBuild()
   await typescriptBuild()
   const bs = browserSync.create()
   const watcher = bs.watch(config.browsersync.files)
   bs.init(config.browsersync.init)
   spinner.stop()
+  console.log(printBuild())
+  console.log('Waffles were completed in ' + timer.get('timer').delta + 'ms. Now watching ...')
 
   watcher.on('change', async path => {
     Object.keys(require.cache).forEach(id => {
@@ -122,6 +138,16 @@ const waffleiron = async () => {
       console.error(err)
       process.exit(1)
     }
+  }
+
+  function printBuild() {
+    const files = fs.readdirSync(config.outDir, 'utf8')
+    let outputFiles = []
+    for (let name of files) {
+      const size = fs.statSync(config.outDir + '/' + name).size
+      outputFiles.push([name, size > 2000000 ? filesize(size) + ' *large' :  filesize(size)])
+    }
+    return table(outputFiles)
   }
 
   // make a directory

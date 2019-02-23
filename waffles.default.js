@@ -1,6 +1,7 @@
 module.exports = () => ({
   env: 'development',
-  cache: './.cache',
+  outDir: 'public',
+  cache: '.cache',
   browsersync: {
     init: {
       notify: true,
