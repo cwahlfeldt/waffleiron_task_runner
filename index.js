@@ -121,7 +121,7 @@ const waffleiron = async () => {
   // build typescript
   async function typescriptBuild() {
     const {err} = await exec(
-      __dirname + '/node_modules/.bin/rollup --config ' + __dirname + '/rollup.config.js',
+      './node_modules/.bin/rollup --config ' + __dirname + '/rollup.config.js',
     )
     if (err) {
       console.error(err)
@@ -132,7 +132,7 @@ const waffleiron = async () => {
   // build postcss
   async function postcssBuild() {
     const {err, stdout} = await exec(
-      __dirname + '/node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ./src/styles/index.css -o ./public/bundle.css',
+      './node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ./src/styles/index.css -o ./public/bundle.css',
     )
     if (err) {
       console.error(stdout)
