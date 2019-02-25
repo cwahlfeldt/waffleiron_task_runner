@@ -4,6 +4,7 @@
     "module": "esnext",
     "allowJs": true,
     "sourceMap": true,
+    "noEmit": true,
     "removeComments": true,
     "strict": true,
     "allowSyntheticDefaultImports": true,
