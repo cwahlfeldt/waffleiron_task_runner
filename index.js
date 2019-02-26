@@ -68,6 +68,7 @@ const waffleiron = async () => {
   console.log('Gonna watch da batter:');
   spinner.start()
   await mkdir()
+  await mkdir('./cache')
   await postcssBuild()
   await typescriptBuild()
 
