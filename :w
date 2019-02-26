@@ -2,12 +2,20 @@ import typescript from 'rollup-plugin-typescript'
 import commonjs from 'rollup-plugin-commonjs'
 import resolve from 'rollup-plugin-node-resolve'
 import uglify from 'rollup-plugin-uglify-es'
+//import * as config from './waffles.default.js'
+const config = require('./waffles.default.js')
 
 export default {
+  input: config.scripts,
+  output: {
+    file: config.outDir + '/' + config.outScript,
+    format: 'iife',
+    sourcemap: config.sourcemaps,
+  },
   plugins: [
-    typescript(),
-    commonjs(),
-    process.env.NODE_ENV === 'production' ? uglify() : undefined,
     resolve(),
+    commonjs(),
+    typescript(),
+    process.env.NODE_ENV === 'production' ? uglify() : undefined,
   ].filter(x => x !== undefined)
 }

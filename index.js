@@ -5,7 +5,6 @@ const fs = require('fs')
 const filesize = require('filesize')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
-const path = require('path')
 const program = require('commander')
 const merge = require('deepmerge')
 const { table } = require('table')
@@ -14,15 +13,15 @@ const rimraf = require('rimraf')
 const spinner = require('ora')()
 const timer = require('simple-timer')
 const ms = require('ms')
+const proxy = require('http-proxy-middleware')
 
+//
 // config file if local merge both defaults and local else just default
 const defaultConfig = require(__dirname + '/waffles.default.js')
 const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js')() : {}
 const config = merge(defaultConfig(), userConfig)
-config.outDir = process.cwd() + '/' + config.outDir
-config.cache = path.join(config.outDir, config.cache)
-console.log(config)
 
+//
 // setup commander
 const pjson = require(__dirname + '/package.json')
 program
@@ -34,6 +33,7 @@ program
   .option('-e, --env <env>', 'environment')
   .parse(process.argv)
 
+//
 // set env for build types
 if (config.env === 'production') {
   process.env.NODE_ENV = 'production'
@@ -44,8 +44,6 @@ if (config.env === 'production') {
 } else {
   process.env.NODE_ENV = 'development'
 }
-
-console.log(process.env.NODE_ENV)
 
 const waffleiron = async () => {
   timer.start('timer')
@@ -76,8 +74,21 @@ const waffleiron = async () => {
   //
   // bs init
   const bs = browserSync.create()
-  const watcher = bs.watch(config.browsersync.files)
-  bs.init(config.browsersync.init)
+  const watcher = bs.watch(config.files)
+  bs.init({
+    notify: true,
+    server: {
+      baseDir: config.baseDir,
+      port: config.port,
+      middleware: [
+        proxy('**', {
+          target: config.proxy,
+          changeOrigin: true,
+          logLevel: config.logLevel,
+        }),
+      ],
+    },
+  })
   spinner.stop()
   console.log(printBuild())
   console.log('Waffles were completed in ' + timer.get('timer').delta + 'ms. Now watching ...')
@@ -95,6 +106,7 @@ const waffleiron = async () => {
       await postcssBuild()
       console.log('tailwind')
       spinner.stop()
+      timer.stop('timer')
       return bs.reload('./index.php')
     }
 
@@ -121,12 +133,13 @@ const waffleiron = async () => {
         return
     }
     spiner.stop()
+    timer.stop('timer')
   })
 
   // build typescript
   async function typescriptBuild() {
     const {err} = await exec(
-      './node_modules/.bin/rollup --config ' + __dirname + '/rollup.config.js',
+      './node_modules/.bin/rollup --config ' + __dirname + '/rollup.config.js -i ' + config.scripts  + ' -m ' + config.sourcemap + ' -o ' + config.outDir + '/' + config.outScript + ' -f iife',
     )
     if (err) {
       console.error(err)
@@ -137,7 +150,7 @@ const waffleiron = async () => {
   // build postcss
   async function postcssBuild() {
     const {err, stdout} = await exec(
-      './node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ./src/styles/index.css -o ./public/bundle.css',
+      './node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ' + config.styles + ' -o ' + config.outDir + '/' + config.outStyle,
     )
     if (err) {
       console.error(stdout)
