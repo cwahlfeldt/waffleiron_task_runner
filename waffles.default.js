@@ -1,3 +1,6 @@
+var proxy = require('http-proxy-middleware')
+var historyApiFallback = require('connect-history-api-fallback')
+
 module.exports = () => ({
   env: 'development',
   outDir: 'public',
@@ -5,9 +8,19 @@ module.exports = () => ({
   browsersync: {
     init: {
       notify: true,
-      proxy: 'https://cwahlfedt.github.io',
-      plugins: ['browser-sync-logger'],
+      server: {
+        baseDir: './',
+        port: 3000,
+        middleware: [
+          proxy('**', {
+            target: 'https://cwahlfeldt.github.io',
+            changeOrigin: true,
+            logLevel: 'debug',
+          }),
+        ]
+      },
     },
+    plugins: ['browser-sync-logger'],
     files: [
       './index.php',
       './functions.php',

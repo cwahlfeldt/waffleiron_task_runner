@@ -21,7 +21,7 @@ const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require
 const config = merge(defaultConfig(), userConfig)
 config.outDir = process.cwd() + '/' + config.outDir
 config.cache = path.join(config.outDir, config.cache)
-console.log(config.cache)
+console.log(config)
 
 // setup commander
 const pjson = require(__dirname + '/package.json')
@@ -50,12 +50,12 @@ console.log(process.env.NODE_ENV)
 const waffleiron = async () => {
   timer.start('timer')
 
+  //
   // -b --build
   if (program.build || program.production) {
     console.log('Pouring batter:')
     spinner.start()
     await mkdir()
-    //await mkdir(config.cache, true)
     await postcssBuild()
     await typescriptBuild()
     spinner.stop()
@@ -65,13 +65,16 @@ const waffleiron = async () => {
     process.exit(0)
   }
 
+  //
   // default -w --watch
   console.log('Gonna watch da batter:');
   spinner.start()
   await mkdir()
-  //await mkdir(config.cache, true)
   await postcssBuild()
   await typescriptBuild()
+
+  //
+  // bs init
   const bs = browserSync.create()
   const watcher = bs.watch(config.browsersync.files)
   bs.init(config.browsersync.init)
@@ -79,6 +82,8 @@ const waffleiron = async () => {
   console.log(printBuild())
   console.log('Waffles were completed in ' + timer.get('timer').delta + 'ms. Now watching ...')
 
+  //
+  // watch on change
   watcher.on('change', async path => {
     Object.keys(require.cache).forEach(id => {
       if (/[\/\\]src[\/\\]/.test(id)) delete require.cache[id];
@@ -90,29 +95,29 @@ const waffleiron = async () => {
       await postcssBuild()
       console.log('tailwind')
       spinner.stop()
-      return bs.reload()
+      return bs.reload('./index.php')
     }
 
     const ext = path.split('.').pop()
     switch (ext) {
       case 'php' || 'blade.php' || 'blade':
         console.log('templates <blade>')
-        bs.reload()
+        bs.reload('index.php')
         return
       case 'css' || 'scss':
         console.log('css oh yes oh yes')
         await postcssBuild()
-        bs.reload()
+        bs.reload('index.php')
         return
       case 'ts' || 'js':
         console.log('js say heeeey yes!')
         await typescriptBuild()
-        bs.reload()
+        bs.reload('index.php')
         return
       default:
         await postcssBuild()
         await typescriptBuild()
-        bs.reload()
+        bs.reload('index.php')
         return
     }
     spiner.stop()
