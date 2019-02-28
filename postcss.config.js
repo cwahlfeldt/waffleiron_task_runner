@@ -4,7 +4,9 @@ const tailwindDir = fs.existsSync('./tailwind.js') ? process.cwd() + '/tailwind.
 module.exports = () => ({
   plugins: [
     require('postcss-easy-import'),
-    require('postcss-simple-vars'),
+    require('postcss-simple-vars')({
+      extensions: ['.css', '.scss'],
+    }),
     require('@csstools/postcss-sass'),
     require('tailwindcss')(tailwindDir),
     require('autoprefixer'),
