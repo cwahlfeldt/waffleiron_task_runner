@@ -11,30 +11,24 @@ or
 ### `waffles.default.js`
 
 ```javascript
-  module.exports = () => ({
-    env: 'development',
-    outDir: 'public',
-    cache: '.cache',
-    browsersync: {
-      init: {
-        notify: true,
-        proxy: 'https://cwahlfedt.github.io',
-        plugins: ['browser-sync-logger'],
-      },
-      files: [
-        './index.php',
-        './functions.php',
-        './tailwind.js',
-        './src/**/*.*',
-      ],
-    },
-    rollup: {
-      input: './src/scripts/index.ts',
-      output: {
-        file: './public/bundle.js',
-        format: 'iife',
-        sourcemap: true,
-      },
-    }
-  })
+module.exports = () => ({
+  env        : 'development',
+  proxy      : 'https://cwahlfeldt.github.io',
+  port       : 3000,
+  baseDir    : './',
+  outDir     : './public',
+  cache      : './cache',
+  scripts    : './src/scripts/index.ts',
+  styles     : './src/styles/index.css',
+  outScript  : 'bundle.js',
+  outStyle   : 'bundle.css',
+  sourcemaps : true,
+  logLevel: 'info',
+  files: [
+    './index.php',
+    './functions.php',
+    './tailwind.js',
+    './src/**/*.*',
+  ],
+})
 ```
