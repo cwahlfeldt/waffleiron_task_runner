@@ -61,7 +61,7 @@ const waffleiron = async () => {
     timer.stop('timer')
     console.log(printBuild())
     console.log('Waffles were completed in ' + ms(timer.get('timer').delta))
-    process.exit(0)
+    return process.exit(0)
   }
 
   //
@@ -109,35 +109,36 @@ const waffleiron = async () => {
       console.log('tailwind')
       spinner.stop()
       timer.stop('timer')
-      return bs.reload('./index.php')
+      return bs.reload()
     }
 
     const ext = path.split('.').pop()
     switch (ext) {
       case 'php' || 'blade.php' || 'blade':
         console.log('templates <blade>')
-        bs.reload('index.php')
+        bs.reload()
         return
       case 'css' || 'scss':
         console.log('css oh yes oh yes')
         await postcssBuild()
-        bs.reload('index.php')
+        bs.reload()
         return
       case 'ts' || 'js':
         console.log('js say heeeey yes!')
         await typescriptBuild()
-        bs.reload('index.php')
+        bs.reload()
         return
       default:
         await postcssBuild()
         await typescriptBuild()
-        bs.reload('index.php')
+        bs.reload()
         return
     }
     spiner.stop()
     timer.stop('timer')
   })
 
+  //
   // build typescript
   async function typescriptBuild() {
     const {err} = await exec(
@@ -149,6 +150,7 @@ const waffleiron = async () => {
     }
   }
 
+  //
   // build postcss
   async function postcssBuild() {
     const {err, stdout} = await exec(
@@ -160,6 +162,8 @@ const waffleiron = async () => {
     }
   }
 
+  //
+  // pretty print build as table
   function printBuild() {
     const files = fs.readdirSync(config.outDir, 'utf8')
     let outputFiles = []
@@ -170,6 +174,7 @@ const waffleiron = async () => {
     return table(outputFiles)
   }
 
+  //
   // make a directory
   async function mkdir(
     name = './public',
@@ -190,4 +195,6 @@ const waffleiron = async () => {
   }
 }
 
+//
+// call that sucker!
 waffleiron()
