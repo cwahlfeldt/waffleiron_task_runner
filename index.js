@@ -6,7 +6,6 @@ const filesize = require('filesize')
 const util = require('util')
 const exec = util.promisify(require('child_process').exec)
 const program = require('commander')
-const merge = require('deepmerge')
 const { table } = require('table')
 const browserSync = require('browser-sync')
 const rimraf = require('rimraf')
@@ -19,7 +18,7 @@ const proxy = require('http-proxy-middleware')
 // config file if local merge both defaults and local else just default
 const defaultConfig = require(__dirname + '/waffles.default.js')
 const userConfig = fs.existsSync(process.cwd() + '/waffles.config.js') ? require(process.cwd() + '/waffles.config.js')() : {}
-const config = merge(defaultConfig(), userConfig)
+const config = require('deepmerge')(defaultConfig(), userConfig)
 
 //
 // setup commander
@@ -44,6 +43,8 @@ if (config.env === 'production') {
 } else {
   process.env.NODE_ENV = 'development'
 }
+
+const isDev = process.env.NODE_ENV === 'development' && (process.env.NODE_ENV !== "production")
 
 const waffleiron = async () => {
   timer.start('timer')
@@ -142,7 +143,7 @@ const waffleiron = async () => {
   // build typescript
   async function typescriptBuild() {
     const {err} = await exec(
-      './node_modules/.bin/rollup --config ' + __dirname + '/rollup.config.js -i ' + config.scripts  + ' -m ' + config.sourcemap + ' -o ' + config.outDir + '/' + config.outScript + ' -f iife',
+      './node_modules/.bin/rollup --config ' + __dirname + '/rollup.config.js -i ' + config.scripts  + ' -m ' + (config.sourcemap && isDev) + ' -o ' + config.outDir + '/' + config.outScript + ' -f iife',
     )
     if (err) {
       console.error(err)
@@ -154,7 +155,7 @@ const waffleiron = async () => {
   // build postcss
   async function postcssBuild() {
     const {err, stdout} = await exec(
-      './node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ' + config.styles + ' -o ' + config.outDir + '/' + config.outStyle,
+      './node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ' + config.styles + ' -o ' + config.outDir + '/' + config.outStyle + ' ' + (config.sourcemap && isDev ? '-m' : '--no-map'),
     )
     if (err) {
       console.error(stdout)

@@ -6,12 +6,13 @@ module.exports = () => ({
   outDir     : './public',
   cache      : './cache',
   scripts    : './src/scripts/index.ts',
-  styles     : './src/styles/index.css',
+  styles     : './src/styles/index.scss',
   outScript  : 'bundle.js',
   outStyle   : 'bundle.css',
+  styleVars  : './src/styles/common/variables.scss',
   sourcemaps : true,
-  logLevel: 'info',
-  files: [
+  logLevel   : 'info',
+  files : [
     './index.php',
     './functions.php',
     './tailwind.js',
