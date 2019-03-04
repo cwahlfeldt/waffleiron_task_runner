@@ -13,7 +13,7 @@ module.exports = () => ({
     require('postcss-simple-vars')({
       variables: config.styleVars, 
     }),
-    //require('@csstools/postcss-sass'),
+    require('@csstools/postcss-sass'),
     require('tailwindcss')(tailwindDir),
     require('autoprefixer'),
     process.env.NODE_ENV === 'production' ? require('cssnano') : undefined,
