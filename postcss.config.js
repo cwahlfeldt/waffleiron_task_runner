@@ -7,7 +7,9 @@ const config = require('deepmerge')(defaultConfig(), userConfig)
 module.exports = () => ({
   syntax: 'postcss-scss',
   plugins: [
-    require('postcss-easy-import'),
+    require('postcss-easy-import')({
+      extensions: ['.css','.scss'],
+    }),
     require('postcss-simple-vars')({
       variables: config.styleVars, 
     }),
@@ -15,5 +17,5 @@ module.exports = () => ({
     require('tailwindcss')(tailwindDir),
     require('autoprefixer'),
     process.env.NODE_ENV === 'production' ? require('cssnano') : undefined,
-  ].filter(x => x !== undefined)
+  ].filter(x => x !== undefined),
 })
