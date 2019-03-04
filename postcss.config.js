@@ -10,10 +10,10 @@ module.exports = () => ({
     require('postcss-easy-import')({
       extensions: ['.css','.scss'],
     }),
-    require('@csstools/postcss-sass'),
     require('postcss-simple-vars')({
       variables: config.styleVars, 
     }),
+    //require('@csstools/postcss-sass'),
     require('tailwindcss')(tailwindDir),
     require('autoprefixer'),
     process.env.NODE_ENV === 'production' ? require('cssnano') : undefined,
