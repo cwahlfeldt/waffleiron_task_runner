@@ -1,7 +1,7 @@
 {
   "name": "waffleiron",
   "author": "Chris Wahlfeldt <chriswahlfeldt@gmail.com> (https://cwahlfeldt.github.io)",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "repository": "github:cwahlfeldt/waffleiron",
   "main": "index.js",
   "license": "MIT",
