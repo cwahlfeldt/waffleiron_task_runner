@@ -6,15 +6,34 @@ const config = require('deepmerge')(defaultConfig(), userConfig)
 
 module.exports = () => ({
   syntax: 'postcss-scss',
+  map: process.env.NODE_ENV !== 'production',
   plugins: [
-    require('postcss-easy-import')({
-      extensions: ['.css','.scss'],
-    }),
-    require('postcss-simple-vars')({
-      variables: config.styleVars, 
+    require('postcss-import'),
+    require('postcss-global-scss-vars')({
+      variables: config.styleVars,
     }),
     require('@csstools/postcss-sass'),
     require('tailwindcss')(tailwindDir),
+    require('@fullhuman/postcss-purgecss')({
+      content: [
+        `${config.viewsDir}/**/*.blade.php`,
+        `${config.viewsDir}/**/*.html`,
+      ],
+      extractors: [
+        {
+          extractor: class {
+            static extract(content) {
+              return content.match(/[A-Za-z0-9-_:\/]+/g) || [];
+            }
+          },
+          extensions: ["html", "js", "php"]
+        }
+      ],
+      whitelist: require("purgecss-whitelister")([
+        `${config.stylesDir}/**/*.scss`,
+        `${config.stylesDir}/**/*.css`,
+      ])
+    }),
     require('autoprefixer'),
     process.env.NODE_ENV === 'production' ? require('cssnano') : undefined,
   ].filter(x => x !== undefined),

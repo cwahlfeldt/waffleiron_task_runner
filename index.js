@@ -13,6 +13,7 @@ const spinner = require('ora')()
 const timer = require('simple-timer')
 const ms = require('ms')
 const proxy = require('http-proxy-middleware')
+const purgecss = require('purgecss')
 
 //
 // config file if local merge both defaults and local else just default
@@ -30,6 +31,8 @@ program
   .option('-b, --build', 'build')
   .option('-p, --production', 'build production')
   .option('-e, --env <env>', 'environment')
+  .option('-c, --css', 'just css')
+  .option('-t, --typescript', 'just typescript')
   .parse(process.argv)
 
 //
@@ -44,10 +47,40 @@ if (config.env === 'production') {
   process.env.NODE_ENV = 'development'
 }
 
-const isDev = process.env.NODE_ENV === 'development' && (process.env.NODE_ENV !== "production")
+const isDev = process.env.NODE_ENV === 'development'
 
 const waffleiron = async () => {
   timer.start('timer')
+
+  //
+  // -c --css
+  if (program.css) {
+    console.log('Pouring batter:')
+    spinner.start()
+    await mkdir()
+    await mkdir(config.cache)
+    await postcssBuild(true)
+    spinner.stop()
+    timer.stop('timer')
+    console.log(printBuild())
+    console.log('Waffles were completed in ' + ms(timer.get('timer').delta))
+    return process.exit(0)   
+  }
+
+  //
+  // -c --css
+  if (program.typescript) {
+    console.log('Pouring batter:')
+    spinner.start()
+    await mkdir()
+    await mkdir(config.cache)
+    await typescriptBuild(true)
+    spinner.stop()
+    timer.stop('timer')
+    console.log(printBuild())
+    console.log('Waffles were completed in ' + ms(timer.get('timer').delta))
+    return process.exit(0)   
+  }
 
   //
   // -b --build
@@ -93,12 +126,14 @@ const waffleiron = async () => {
     },
   })
   spinner.stop()
+  timer.stop('timer')
   console.log(printBuild())
-  console.log('Waffles were completed in ' + timer.get('timer').delta + 'ms. Now watching ...')
+  console.log(`Waffles were completed in ${ms(timer.get('timer').delta)}. Now watching ...`)
 
   //
   // watch on change
   watcher.on('change', async path => {
+    timer.start('timer')
     Object.keys(require.cache).forEach(id => {
       if (/[\/\\]src[\/\\]/.test(id)) delete require.cache[id];
     })
@@ -107,44 +142,51 @@ const waffleiron = async () => {
     spinner.start()
     if (path === 'tailwind.js') {
       await postcssBuild()
-      console.log('tailwind')
       spinner.stop()
       timer.stop('timer')
+      console.log(`Tailwind built in ${ms(timer.get('timer').delta)}`)
       return bs.reload()
     }
 
     const ext = path.split('.').pop()
     switch (ext) {
       case 'php' || 'blade.php' || 'blade':
-        console.log('templates <blade>')
         bs.reload()
+        console.log('Views built')
         return
       case 'css' || 'scss':
-        console.log('css oh yes oh yes')
         await postcssBuild()
+        timer.stop('timer')
+        console.log(`CSS built in ${ms(timer.get('timer').delta)}`)
         bs.reload()
         return
       case 'ts' || 'js':
-        console.log('js say heeeey yes!')
         await typescriptBuild()
+        timer.stop('timer')
+        console.log(`JS built in ${ms(timer.get('timer').delta)}`)
         bs.reload()
         return
       default:
         await postcssBuild()
         await typescriptBuild()
+        timer.stop('timer')
+        console.log(`CSS & JS built in ${ms(timer.get('timer').delta)}`)
         bs.reload()
         return
     }
-    spiner.stop()
-    timer.stop('timer')
   })
 
   //
   // build typescript
-  async function typescriptBuild() {
-    const {err} = await exec(
-      './node_modules/.bin/rollup --config ' + __dirname + '/rollup.config.js -i ' + config.scripts  + ' -m ' + (config.sourcemap && isDev) + ' -o ' + config.outDir + '/' + config.outScript + ' -f iife',
-    )
+  async function typescriptBuild(debug) {
+    const {err} = await exec(`
+      ./node_modules/.bin/rollup \
+        --config ${__dirname}/rollup.config.js -i ${config.scripts} \
+        ${process.env.NODE_ENV !== 'production' ? '-m' : ''} \
+        -o ${config.outDir}/${config.outScript} \
+        -f iife
+    `)
+    if (debug) console.log(stdout)
     if (err) {
       console.error(err)
       process.exit(1)
@@ -153,10 +195,14 @@ const waffleiron = async () => {
 
   //
   // build postcss
-  async function postcssBuild() {
-    const {err, stdout} = await exec(
-      './node_modules/.bin/postcss --config ' + __dirname + '/postcss.config.js ' + config.styles + ' -o ' + config.outDir + '/' + config.outStyle + ' ' + (config.sourcemap && isDev ? '-m' : '--no-map'),
-    )
+  async function postcssBuild(debug) {
+    const {err, stdout} = await exec(`
+      ./node_modules/.bin/postcss \
+        --config ${__dirname}/postcss.config.js \
+        ${config.styles} \
+        -o ${config.outDir}/${config.outStyle}
+    `)
+    if (debug) console.log(stdout)
     if (err) {
       console.error(stdout)
       process.exit(1)
