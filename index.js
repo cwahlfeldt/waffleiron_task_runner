@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+//
 // dependencies
 const fs = require('fs')
 const filesize = require('filesize')
@@ -227,13 +228,16 @@ const waffleiron = async () => {
     name = './public',
     overwrite = true
   ) {
+    const permissions = name.search('cache') !== -1 ? '0777' : '0755'
     try {
       if (!fs.existsSync(name)) {
         fs.mkdirSync(name)
+        fs.chmodSync(name, permissions)
       } else {
         if (!overwrite) return
         rimraf.sync(name)
         fs.mkdirSync(name)
+        fs.chmodSync(name, permissions)
       }
     } catch (err) {
       console.log(err)
