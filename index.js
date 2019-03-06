@@ -34,6 +34,7 @@ program
   .option('-e, --env <env>', 'environment')
   .option('-c, --css', 'just css')
   .option('-t, --typescript', 'just typescript')
+  .option('-wp, --wordpress', 'wordpress cli things')
   .parse(process.argv)
 
 //
@@ -52,6 +53,11 @@ const isDev = process.env.NODE_ENV === 'development'
 
 const waffleiron = async () => {
   timer.start('timer')
+
+  if (program.wordpress) {
+    await wpcli()
+    return process.exit(0)
+  }
 
   //
   // -c --css
@@ -180,18 +186,18 @@ const waffleiron = async () => {
   //
   // build typescript
   async function typescriptBuild(debug) {
-    const {err} = await exec(`
+    const { err, stdout } = await exec(`
       ./node_modules/.bin/rollup \
         --config ${__dirname}/rollup.config.js -i ${config.scripts} \
         ${process.env.NODE_ENV !== 'production' ? '-m' : ''} \
         -o ${config.outDir}/${config.outScript} \
         -f iife
     `)
-    if (debug) console.log(stdout)
     if (err) {
-      console.error(err)
-      process.exit(1)
+      console.error(stdout)
+      return process.exit(1)
     }
+    if (debug) console.log(stdout)
   }
 
   //
@@ -203,11 +209,47 @@ const waffleiron = async () => {
         ${config.styles} \
         -o ${config.outDir}/${config.outStyle}
     `)
-    if (debug) console.log(stdout)
     if (err) {
       console.error(stdout)
-      process.exit(1)
+      return process.exit(1)
     }
+    if (debug) console.log(stdout)
+  }
+
+  async function wpcli() {
+    const { err, stdout } = await exec(`
+      lando wp post-type list \
+        --fields=name,public \
+        --format=json
+    `)
+    if (err) {
+      console.error(stdout)
+      return process.exit(1)
+    }
+
+    const postTypes = JSON.parse(stdout).filter(el => el.public)
+    const wpclidata = await Promise.all(postTypes.map(async (type, i) => {
+      const {err, stdout} = await wpPost(type.name)
+      const data = JSON.parse(stdout)
+      if (err) return console.log(stdout)
+      return data.map(url => url.url)
+    }))
+    const urls = [].concat.apply([], wpclidata)
+    console.log(urls)
+  }
+
+  async function wpPost(postType) {
+    const { err, stdout } = await exec(`
+      lando wp post list \
+        --post_type=${postType} \
+        --fields=url \
+        --format=json;
+    `)
+    if (err) {
+      console.error(stdout)
+      return process.exit(1)
+    } 
+    return {err, stdout}
   }
 
   //
