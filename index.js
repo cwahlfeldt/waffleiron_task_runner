@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 
 //
+// set default max listeners to 0 for weird warnings
+require('events').EventEmitter.defaultMaxListeners = 0
+
+//
 // dependencies
 const fs = require('fs')
 const filesize = require('filesize')
@@ -15,6 +19,7 @@ const timer = require('simple-timer')
 const ms = require('ms')
 const proxy = require('http-proxy-middleware')
 const purgecss = require('purgecss')
+const puppeteer = require('puppeteer');
 
 //
 // config file if local merge both defaults and local else just default
@@ -34,7 +39,7 @@ program
   .option('-e, --env <env>', 'environment')
   .option('-c, --css', 'just css')
   .option('-t, --typescript', 'just typescript')
-  .option('-wp, --wordpress', 'wordpress cli things')
+  .option('--wp', 'wordpress cli things')
   .parse(process.argv)
 
 //
@@ -54,15 +59,10 @@ const isDev = process.env.NODE_ENV === 'development'
 const waffleiron = async () => {
   timer.start('timer')
 
-  if (program.wordpress) {
-    await wpcli()
-    return process.exit(0)
-  }
-
   //
   // -c --css
   if (program.css) {
-    console.log('Pouring batter:')
+    console.log('Pouring batter...')
     spinner.start()
     await mkdir()
     await mkdir(config.cache)
@@ -77,7 +77,7 @@ const waffleiron = async () => {
   //
   // -c --css
   if (program.typescript) {
-    console.log('Pouring batter:')
+    console.log('Pouring batter...')
     spinner.start()
     await mkdir()
     await mkdir(config.cache)
@@ -92,7 +92,7 @@ const waffleiron = async () => {
   //
   // -b --build
   if (program.build || program.production) {
-    console.log('Pouring batter:')
+    console.log('Pouring batter...')
     spinner.start()
     await mkdir()
     await mkdir(config.cache)
@@ -101,13 +101,17 @@ const waffleiron = async () => {
     spinner.stop()
     timer.stop('timer')
     console.log(printBuild())
+    if (program.wp) {
+      console.log('Prerendering cache...')
+      await wpcli()
+    }
     console.log('Waffles were completed in ' + ms(timer.get('timer').delta))
     return process.exit(0)
   }
 
   //
   // default -w --watch
-  console.log('Gonna watch da batter:');
+  console.log('Gonna watch da batter...');
   spinner.start()
   await mkdir()
   await mkdir(config.cache)
@@ -216,6 +220,9 @@ const waffleiron = async () => {
     if (debug) console.log(stdout)
   }
 
+  //
+  // finds all wordpress public urls and headless crawls em
+  // so all the cache files are remade
   async function wpcli() {
     const { err, stdout } = await exec(`
       lando wp post-type list \
@@ -226,7 +233,6 @@ const waffleiron = async () => {
       console.error(stdout)
       return process.exit(1)
     }
-
     const postTypes = JSON.parse(stdout).filter(el => el.public)
     const wpclidata = await Promise.all(postTypes.map(async (type, i) => {
       const {err, stdout} = await wpPost(type.name)
@@ -235,7 +241,11 @@ const waffleiron = async () => {
       return data.map(url => url.url)
     }))
     const urls = [].concat.apply([], wpclidata)
-    console.log(urls)
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage()
+    await Promise.all(urls.map(async url => await page.goto(url)))
+    await page.close()
+    await browser.close()
   }
 
   async function wpPost(postType) {
