@@ -14,7 +14,7 @@ module.exports = () => ({
     }),
     require('@csstools/postcss-sass'),
     require('tailwindcss')(tailwindDir),
-    require('@fullhuman/postcss-purgecss')({
+    process.env.NODE_ENV === 'production' ? require('@fullhuman/postcss-purgecss')({
       content: [
         `${config.viewsDir}/**/*.blade.php`,
         `${config.viewsDir}/**/*.html`,
@@ -33,8 +33,9 @@ module.exports = () => ({
         `${config.stylesDir}/**/*.scss`,
         `${config.stylesDir}/**/*.css`,
         `${config.viewsDir}/**/*.php`,
+        ...config.purgeCSSWhitelist(),
       ])
-    }),
+    }) : undefined,
     require('autoprefixer'),
     process.env.NODE_ENV === 'production' ? require('cssnano') : undefined,
   ].filter(x => x !== undefined),

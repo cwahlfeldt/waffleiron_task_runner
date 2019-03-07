@@ -94,7 +94,23 @@ const waffleiron = async () => {
 
   //
   // -b --build
-  if (program.build || program.production) {
+  if (program.build) {
+    console.log('Pouring batter...')
+    spinner.start()
+    await mkdir()
+    await mkdir(config.cache)
+    await postcssBuild()
+    await typescriptBuild()
+    spinner.stop()
+    console.log(printBuild())
+    timer.stop('timer')
+    console.log('Waffles were completed in ' + ms(timer.get('timer').delta))
+    return process.exit(0)
+  }
+
+  //
+  // -b --build
+  if (program.production || (program.build && program.production)) {
     console.log('Pouring batter...')
     spinner.start()
     await mkdir()
