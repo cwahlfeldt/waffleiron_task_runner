@@ -3,6 +3,7 @@ module.exports = () => ({
   proxy      : 'https://cwahlfeldt.github.io',
   port       : 3000,
   baseDir    : './',
+  debug      : false,
   outDir     : './public',
   cache      : './cache',
   viewsDir   : './src/views',

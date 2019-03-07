@@ -19,7 +19,7 @@ const timer = require('simple-timer')
 const ms = require('ms')
 const proxy = require('http-proxy-middleware')
 const purgecss = require('purgecss')
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer')
 
 //
 // config file if local merge both defaults and local else just default
@@ -38,6 +38,7 @@ program
   .option('-p, --production', 'build production')
   .option('-e, --env <env>', 'environment')
   .option('-c, --css', 'just css')
+  .option('-d, --debug', 'debug')
   .option('-t, --typescript', 'just typescript')
   .option('--wp', 'wordpress cli things')
   .parse(process.argv)
@@ -54,6 +55,8 @@ if (config.env === 'production') {
   process.env.NODE_ENV = 'development'
 }
 
+if (program.debug) config.debug = true
+
 const isDev = process.env.NODE_ENV === 'development'
 
 const waffleiron = async () => {
@@ -66,7 +69,7 @@ const waffleiron = async () => {
     spinner.start()
     await mkdir()
     await mkdir(config.cache)
-    await postcssBuild(true)
+    await postcssBuild()
     spinner.stop()
     timer.stop('timer')
     console.log(printBuild())
@@ -81,7 +84,7 @@ const waffleiron = async () => {
     spinner.start()
     await mkdir()
     await mkdir(config.cache)
-    await typescriptBuild(true)
+    await typescriptBuild()
     spinner.stop()
     timer.stop('timer')
     console.log(printBuild())
@@ -98,20 +101,22 @@ const waffleiron = async () => {
     await mkdir(config.cache)
     await postcssBuild()
     await typescriptBuild()
-    spinner.stop()
-    timer.stop('timer')
     console.log(printBuild())
+    spinner.stop()
     if (program.wp) {
       console.log('Prerendering cache...')
+      spinner.start()
       await wpcli()
+      spinner.start()
     }
+    timer.stop('timer')
     console.log('Waffles were completed in ' + ms(timer.get('timer').delta))
     return process.exit(0)
   }
 
   //
   // default -w --watch
-  console.log('Gonna watch da batter...');
+  console.log('Gonna watch da batter...')
   spinner.start()
   await mkdir()
   await mkdir(config.cache)
@@ -146,7 +151,7 @@ const waffleiron = async () => {
   watcher.on('change', async path => {
     timer.start('timer')
     Object.keys(require.cache).forEach(id => {
-      if (/[\/\\]src[\/\\]/.test(id)) delete require.cache[id];
+      if (/[\/\\]src[\/\\]/.test(id)) delete require.cache[id]
     })
 
     console.log('Pouring more batter!')
@@ -189,7 +194,7 @@ const waffleiron = async () => {
 
   //
   // build typescript
-  async function typescriptBuild(debug) {
+  async function typescriptBuild() {
     const { err, stdout } = await exec(`
       ./node_modules/.bin/rollup \
         --config ${__dirname}/rollup.config.js -i ${config.scripts} \
@@ -201,12 +206,12 @@ const waffleiron = async () => {
       console.error(stdout)
       return process.exit(1)
     }
-    if (debug) console.log(stdout)
+    if (config.debug) console.log(stdout)
   }
 
   //
   // build postcss
-  async function postcssBuild(debug) {
+  async function postcssBuild() {
     const {err, stdout} = await exec(`
       ./node_modules/.bin/postcss \
         --config ${__dirname}/postcss.config.js \
@@ -217,7 +222,7 @@ const waffleiron = async () => {
       console.error(stdout)
       return process.exit(1)
     }
-    if (debug) console.log(stdout)
+    if (config.debug) console.log(stdout)
   }
 
   //
@@ -242,10 +247,21 @@ const waffleiron = async () => {
     }))
     const urls = [].concat.apply([], wpclidata)
     const browser = await puppeteer.launch()
-    const page = await browser.newPage()
-    await Promise.all(urls.map(async url => await page.goto(url)))
-    await page.close()
+    const response = urls.map(async url => {
+      const page = await browser.newPage()
+      page.setDefaultNavigationTimeout(0)
+      const resp = await page.goto(url, {waitUntil: 'domcontentloaded'})
+      await page.close()
+      return resp
+    })
+    const pages = await Promise.all(response)
     await browser.close()
+    let content = ``
+    for (let i = 0; i < pages.length; i++) {
+      const resp = `${pages[i]._url}\n${pages[i]._status}`
+      content += `${resp}\n\n`
+    }
+    if (config.debug) fs.writeFileSync('./cache/resp.log', content)
   }
 
   async function wpPost(postType) {
@@ -253,7 +269,7 @@ const waffleiron = async () => {
       lando wp post list \
         --post_type=${postType} \
         --fields=url \
-        --format=json;
+        --format=json
     `)
     if (err) {
       console.error(stdout)
@@ -272,6 +288,19 @@ const waffleiron = async () => {
       outputFiles.push([name, size > 2000000 ? filesize(size) + ' *large' :  filesize(size)])
     }
     return table(outputFiles)
+  }
+
+  function getCircularReplacer() {
+    const seen = new WeakSet()
+    return (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return
+        }
+        seen.add(value)
+      }
+      return value
+    }
   }
 
   //
