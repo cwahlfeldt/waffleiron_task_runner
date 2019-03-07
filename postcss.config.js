@@ -32,6 +32,7 @@ module.exports = () => ({
       whitelist: require("purgecss-whitelister")([
         `${config.stylesDir}/**/*.scss`,
         `${config.stylesDir}/**/*.css`,
+        `${config.viewsDir}/**/*.php`,
       ])
     }),
     require('autoprefixer'),
