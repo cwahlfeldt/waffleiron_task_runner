@@ -101,8 +101,8 @@ const waffleiron = async () => {
     await mkdir(config.cache)
     await postcssBuild()
     await typescriptBuild()
-    console.log(printBuild())
     spinner.stop()
+    console.log(printBuild())
     if (program.wp) {
       console.log('Prerendering cache...')
       spinner.start()
