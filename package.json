@@ -23,7 +23,7 @@
     "start": "./index.js",
     "build": "./index.js --build",
     "watch": "./index.js --watch",
-    "deploy": "gacp %npm_package_version% && npm version patch && npm publish",
+    "deploy": "gacp $npm_package_version && npm version patch && npm publish",
     "tidy": "rm -rf .cache public"
   },
   "dependencies": {
