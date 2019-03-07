@@ -256,12 +256,14 @@ const waffleiron = async () => {
     })
     const pages = await Promise.all(response)
     await browser.close()
-    let content = ``
-    for (let i = 0; i < pages.length; i++) {
-      const resp = `${pages[i]._url}\n${pages[i]._status}`
-      content += `${resp}\n\n`
+    if (config.debug) {
+      let content = ``
+      for (let i = 0; i < pages.length; i++) {
+        const resp = `${pages[i]._url}\n${pages[i]._status}`
+        content += `${resp}\n\n`
+      }
+      fs.writeFileSync('./cache/resp.log', content)
     }
-    if (config.debug) fs.writeFileSync('./cache/resp.log', content)
   }
 
   async function wpPost(postType) {
