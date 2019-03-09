@@ -2,13 +2,29 @@ import typescript from 'rollup-plugin-typescript'
 import commonjs from 'rollup-plugin-commonjs'
 import resolve from 'rollup-plugin-node-resolve'
 import uglify from 'rollup-plugin-uglify-es'
+import json from 'rollup-plugin-json'
 
 export default {
   treeshake: true,
+  output: {
+    name: 'bundle',
+    format: 'iife',
+  },
   plugins: [
-    typescript(),
-    commonjs(),
+    typescript({module: 'CommonJS'}),
+    commonjs({
+      extensions: ['.ts', '.js']
+    }),
+    resolve({
+      browser: true,
+      extensions: [
+        '.json',
+        '.ts',
+        '.js',
+        '.jsx',
+      ]
+    }),
+    json(),
     process.env.NODE_ENV === 'production' ? uglify() : undefined,
-    resolve(),
   ].filter(x => x !== undefined),
 }
