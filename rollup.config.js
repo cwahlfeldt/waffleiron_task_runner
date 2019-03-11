@@ -15,15 +15,7 @@ export default {
     commonjs({
       extensions: ['.ts', '.js']
     }),
-    resolve({
-      browser: true,
-      extensions: [
-        '.json',
-        '.ts',
-        '.js',
-        '.jsx',
-      ]
-    }),
+    resolve({browser: true}),
     json(),
     process.env.NODE_ENV === 'production' ? uglify() : undefined,
   ].filter(x => x !== undefined),

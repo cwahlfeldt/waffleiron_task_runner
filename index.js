@@ -278,7 +278,7 @@ const waffleiron = async () => {
         const resp = `${pages[i]._url}\n${pages[i]._status}`
         content += `${resp}\n\n`
       }
-      fs.writeFileSync('./cache/resp.log', content)
+      //fs.writeFileSync('./cache/resp.log', content)
     }
   }
 
