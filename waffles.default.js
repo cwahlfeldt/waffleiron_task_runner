@@ -16,7 +16,9 @@ module.exports = () => ({
   styleVars  : './src/styles/variables.js',
   sourcemaps : true,
   logLevel   : 'info',
-  purgeCSSWhitelist: () => ([this.styleVars]),
+  purgeCSSWhitelist: [
+    './src/styles/variables.js'
+  ],
   files : [
     './index.php',
     './functions.php',

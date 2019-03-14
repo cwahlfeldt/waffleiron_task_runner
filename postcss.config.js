@@ -16,8 +16,13 @@ module.exports = () => ({
     require('tailwindcss')(tailwindDir),
     process.env.NODE_ENV === 'production' ? require('@fullhuman/postcss-purgecss')({
       content: [
-        `${config.viewsDir}/**/*.blade.php`,
         `${config.viewsDir}/**/*.html`,
+        `${config.viewsDir}/**/*.php`,
+        `${config.viewsDir}/**/*.blade.php`,
+        // `${config.stylesDir}/**/*.scss`,
+        // `${config.stylesDir}/**/*.css`,
+        // `${config.scriptsDir}/**/*.ts`,
+        // `${config.scriptsDir}/**/*.js`,
       ],
       extractors: [
         {
@@ -33,7 +38,7 @@ module.exports = () => ({
         `${config.stylesDir}/**/*.scss`,
         `${config.stylesDir}/**/*.css`,
         `${config.viewsDir}/**/*.php`,
-        ...config.purgeCSSWhitelist(),
+        ...config.purgeCSSWhitelist,
       ])
     }) : undefined,
     require('autoprefixer'),
