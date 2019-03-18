@@ -11,9 +11,12 @@ export default {
     format: 'iife',
   },
   plugins: [
-    typescript({module: 'CommonJS'}),
+    typescript({
+      module: 'commonjs',
+      jsx: 'preserve',
+    }),
     commonjs({
-      extensions: ['.ts', '.js']
+      extensions: ['.ts', '.js', '.tsx', '.jsx']
     }),
     resolve({browser: true}),
     json(),
