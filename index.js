@@ -145,14 +145,24 @@ const waffleiron = async () => {
   const watcher = bs.watch(config.files)
   bs.init({
     notify: true,
+    open: config.open,
+    //proxy: config.proxy,
     server: {
       baseDir: config.baseDir,
       port: config.port,
+      host: `localhost`,
+      serveStatic: config.staticDirs,
+      // serveStaticOptions: {
+      //   extensions: ['html', 'php'] // pretty urls
+      // },
       middleware: [
         proxy('**', {
           target: config.proxy,
-          changeOrigin: true,
           logLevel: config.logLevel,
+          changeOrigin: true,
+          /*pathRewrite: {
+            '^/wp-content/themes/wafflesiron-theme/index.php': `/wp-content/themes/waffleiron-theme/index.php`,
+          }*/
         }),
       ],
     },

@@ -1,6 +1,7 @@
 module.exports = () => ({
   env        : 'development',
   proxy      : 'https://cwahlfeldt.github.io',
+  staticDirs  : ['./public'], 
   port       : 3000,
   baseDir    : './',
   debug      : false,
