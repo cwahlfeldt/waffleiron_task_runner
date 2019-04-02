@@ -13,7 +13,6 @@ export default {
   plugins: [
     typescript({
       module: 'commonjs',
-      jsx: 'preserve',
     }),
     commonjs({
       extensions: ['.ts', '.js', '.tsx', '.jsx']
